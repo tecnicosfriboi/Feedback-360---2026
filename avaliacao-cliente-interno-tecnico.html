@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Avaliação de Técnicos — Cliente Interno</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#E9EEF3;
+    --surface:#FFFFFF;
+    --ink:#0F2438;
+    --ink-soft:#35516B;
+    --accent:#C8102E;
+    --accent-soft:#F4D6DC;
+    --olive:#0B3C74;
+    --olive-soft:#D7E3F0;
+    --muted:#6C7C8C;
+    --line:#C9D3DE;
+    --line-strong:#9FB0C2;
+    --ok:#0B3C74;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Public Sans',sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex;min-height:100vh;}
+  h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif;letter-spacing:-0.01em;}
+
+  /* ---------- Rail ---------- */
+  .rail{
+    width:238px;flex:none;background:var(--ink);color:#EAF1F8;
+    display:flex;flex-direction:column;padding:22px 16px;gap:22px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;padding:0 4px;}
+  .brand-mark{
+    width:36px;height:36px;border-radius:3px;background:var(--accent);
+    color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;
+    display:flex;align-items:center;justify-content:center;letter-spacing:0;flex:none;
+  }
+  .brand-text{display:flex;flex-direction:column;line-height:1.25;}
+  .brand-text strong{color:#EAF1F8;font-size:14.5px;font-family:'Space Grotesk',sans-serif;}
+  .brand-text span{color:#7FA0BE;font-size:11.5px;}
+  nav.tabs{display:flex;flex-direction:column;gap:2px;}
+  nav.tabs button{
+    all:unset;cursor:pointer;color:#A9BCCF;font-size:13.5px;padding:10px 12px;
+    border-radius:2px;border-left:2px solid transparent;font-weight:500;
+  }
+  nav.tabs button:hover{background:rgba(255,255,255,0.05);color:#EAF1F8;}
+  nav.tabs button.active{background:rgba(200,16,46,0.22);color:#EAF1F8;border-left:2px solid var(--accent);}
+  .rail-foot{margin-top:auto;color:#5E7891;font-size:10.5px;line-height:1.5;padding:0 4px;}
+
+  /* ---------- Main ---------- */
+  main{flex:1;min-width:0;padding:36px 42px 80px;max-width:920px;}
+  .eyebrow{color:var(--accent);font-size:12px;font-weight:600;margin:0 0 6px;}
+  h1.page-title{font-size:26px;margin:0 0 6px;}
+  p.page-sub{color:var(--ink-soft);font-size:14.5px;margin:0 0 30px;max-width:62ch;line-height:1.55;}
+
+  .section{border-top:1px solid var(--line-strong);padding-top:22px;margin-top:22px;}
+  .section-num{
+    display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;
+    background:var(--ink);color:#EAF1F8;font-family:'Space Grotesk',sans-serif;font-size:12px;
+    font-weight:700;border-radius:2px;margin-right:9px;
+  }
+  .section-title{font-size:15.5px;font-weight:600;display:flex;align-items:center;margin-bottom:4px;}
+  .section-help{color:var(--muted);font-size:13px;margin:0 0 18px 31px;line-height:1.5;}
+
+  .field-row{display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;}
+  .field{flex:1;min-width:200px;display:flex;flex-direction:column;gap:6px;}
+  .field label{font-size:12px;color:var(--ink-soft);font-weight:600;}
+  select, input[type=text], textarea{
+    font-family:'Public Sans',sans-serif;font-size:13.5px;color:var(--ink);
+    background:var(--surface);border:1px solid var(--line-strong);border-radius:3px;
+    padding:9px 10px;width:100%;
+  }
+  select:focus, input:focus, textarea:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  textarea{resize:vertical;min-height:80px;line-height:1.5;}
+
+  /* value card */
+  .value-card{border:1px solid var(--line);background:var(--surface);border-radius:3px;padding:16px 18px;margin-bottom:12px;}
+  .value-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:8px;}
+  .value-badge{
+    flex:none;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--accent);
+    color:var(--accent);font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:11px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .value-name{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14.5px;margin:0 0 2px;}
+  .value-desc{color:var(--ink-soft);font-size:12.5px;line-height:1.55;margin:0;}
+  .scale{display:flex;gap:6px;margin-top:12px;}
+  .scale button{
+    all:unset;cursor:pointer;flex:1;text-align:center;padding:8px 4px 7px;
+    border:1px solid var(--line-strong);border-radius:2px;font-family:'Space Grotesk',sans-serif;
+    font-weight:700;font-size:14px;color:var(--ink-soft);background:var(--surface);
+  }
+  .scale button .n{display:block;}
+  .scale button:hover{border-color:var(--accent);color:var(--accent);}
+  .scale button.sel{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .scale-caption{font-size:11px;color:var(--muted);margin-top:6px;min-height:14px;}
+  .value-comment{margin-top:12px;}
+  .value-comment textarea{width:100%;min-height:64px;font-size:13px;}
+  .value-comment-counter{font-size:11px;color:var(--accent);margin-top:5px;font-weight:600;}
+  .value-comment-counter.ok{color:var(--ok);}
+
+  .btn{
+    all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:8px;
+    background:var(--accent);color:#fff;font-weight:600;font-size:13.5px;
+    padding:11px 20px;border-radius:3px;font-family:'Public Sans',sans-serif;
+  }
+  .btn:hover{background:#932A1B;}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line-strong);}
+  .btn.ghost:hover{border-color:var(--accent);color:var(--accent);}
+  .btn.small{padding:7px 12px;font-size:12.5px;}
+  .btn:disabled{opacity:0.45;cursor:not-allowed;}
+
+  .banner{
+    border:1px solid var(--line-strong);background:var(--olive-soft);color:#123049;
+    padding:12px 14px;border-radius:3px;font-size:13px;margin-bottom:20px;line-height:1.5;
+  }
+  .banner.err{background:#F3D9D2;color:#7A2313;border-color:#D9A594;}
+  .banner.info{background:var(--surface);color:var(--ink-soft);}
+
+  /* legend on home */
+  .legend-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-top:8px;}
+  .legend-item{border:1px solid var(--line);background:var(--surface);border-radius:3px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;}
+  .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0 8px;}
+  .stat{border:1px solid var(--line);background:var(--surface);border-radius:3px;padding:14px 16px;}
+  .stat .num{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;color:var(--accent);}
+  .stat .lab{font-size:12px;color:var(--muted);margin-top:2px;}
+
+  .module-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-top:22px;}
+  .module-card{border:1px solid var(--line-strong);background:var(--surface);border-radius:3px;padding:18px;cursor:pointer;}
+  .module-card:hover{border-color:var(--accent);}
+  .module-card .tag{font-size:11px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;}
+  .module-card h3{font-size:15.5px;margin:6px 0 6px;}
+  .module-card p{font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin:0;}
+
+  /* results */
+  .filter-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:22px;}
+  .filter-bar .field{max-width:260px;}
+  .stamp{
+    width:104px;height:104px;border-radius:50%;border:3px solid var(--accent);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:var(--accent);flex:none;transform:rotate(-6deg);
+  }
+  .stamp .val{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;line-height:1;}
+  .stamp .lab{font-size:9px;letter-spacing:0.05em;margin-top:2px;text-transform:uppercase;}
+  .result-head{display:flex;gap:24px;align-items:center;border:1px solid var(--line);background:var(--surface);padding:20px 22px;border-radius:3px;margin-bottom:22px;}
+  .result-head .meta{font-size:13px;color:var(--ink-soft);line-height:1.6;}
+  .result-head .meta b{color:var(--ink);}
+  .bar-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+  .bar-row .lbl{width:150px;flex:none;font-size:12.5px;font-weight:600;}
+  .bar-track{flex:1;height:10px;background:var(--line);border-radius:5px;overflow:hidden;}
+  .bar-fill{height:100%;background:var(--accent);border-radius:5px;}
+  .bar-row .v{width:32px;flex:none;text-align:right;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12.5px;}
+
+  .comment-item{border-top:1px solid var(--line);padding:12px 0;font-size:13px;line-height:1.55;}
+  .comment-item .src{font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;}
+  .empty{color:var(--muted);font-size:13px;padding:20px 0;}
+
+  /* roster */
+  .roster-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px;}
+  .roster-col h3{font-size:14px;margin:0 0 4px;}
+  .roster-col p.desc{font-size:12px;color:var(--muted);margin:0 0 12px;}
+  .add-row{display:flex;gap:6px;margin-bottom:12px;}
+  .add-row input{flex:1;}
+  ul.roster-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
+  ul.roster-list li{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    border:1px solid var(--line);background:var(--surface);border-radius:3px;padding:8px 10px;font-size:13px;
+  }
+  ul.roster-list button{all:unset;cursor:pointer;color:var(--muted);font-size:12px;}
+  ul.roster-list button:hover{color:var(--accent);}
+
+  .top-tabs{display:none;}
+  @media (max-width: 860px){
+    .rail{position:fixed;left:0;right:0;bottom:0;top:auto;width:100%;flex-direction:row;
+      overflow-x:auto;padding:10px 12px;align-items:center;z-index:20;gap:14px;}
+    .brand{display:none;}
+    nav.tabs{flex-direction:row;gap:4px;}
+    nav.tabs button{white-space:nowrap;}
+    .rail-foot{display:none;}
+    main{padding:22px 18px 100px;max-width:100%;}
+    .app{flex-direction:column;}
+    .result-head{flex-direction:column;align-items:flex-start;}
+  }
+</style>
+
+
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="brand">
+      <div class="brand-mark">JBS</div>
+      <div class="brand-text">
+        <strong>Avaliação de Técnicos</strong>
+        <span>Cliente Interno</span>
+      </div>
+    </div>
+    <nav class="tabs" id="nav">
+      <button data-tab="home">Painel</button>
+      <button data-tab="cliente">Avaliar Técnico</button>
+      <button data-tab="resultados">Resultados</button>
+      <button data-tab="equipe">Técnicos</button>
+    </nav>
+    <div class="rail-foot">Baseado no F-PRESI-RH-0071 — critérios de aderência aos valores JBS/Friboi, adaptados ao atendimento ao cliente interno.</div>
+  </aside>
+  <main id="main"></main>
+</div>
+
+<script>
+(function(){
+
+  // ---------------- Data ----------------
+  var JBS_VALUES = [
+    {key:'atitude_dono', code:'AD', label:'Atitude de dono',
+      desc:'Comprometido com o resultado, conhece com profundidade aquilo que faz e tem a visão do todo. Age com obstinação, disciplina e foco no detalhe. É mão na massa, busca sempre ser o melhor naquilo que faz e não desiste nunca. Está sempre disponível e dá o exemplo. Indigna-se, não se conforma, não fica quieto nem se omite quando vê algo que não funciona bem. É atento aos gastos e à economia de cada centavo.'},
+    {key:'determinacao', code:'DT', label:'Determinação',
+      desc:'É obstinado, entrega resultados superiores e cumpre seus compromissos. Faz as coisas acontecerem, busca alternativas para os problemas e engaja as pessoas em prol de um objetivo comum. Tem senso de urgência, atitude de dono e não desiste nunca.'},
+    {key:'disciplina', code:'DC', label:'Disciplina',
+      desc:'Cumpre o combinado, é pontual com horário e seus compromissos. Executa suas tarefas de forma disciplinada. É focado, pragmático, otimiza o tempo, atividades e recursos. Entrega resultados, não cria justificativas e desculpas.'},
+    {key:'disponibilidade', code:'DP', label:'Disponibilidade',
+      desc:'É receptivo, acessível, disponível, não tem dia e não tem hora, está sempre pronto e tem o trabalho como prioridade. Está aberto ao novo, às mudanças e motivado para novos desafios.'},
+    {key:'simplicidade', code:'SI', label:'Simplicidade',
+      desc:'Faz as coisas acontecerem de forma simples e prática, é mão na massa, vai direto ao ponto, descomplica e desburocratiza respeitando as normas.'},
+    {key:'franqueza', code:'FR', label:'Franqueza',
+      desc:'É direto, sincero, verdadeiro e transparente em suas relações, sempre com respeito, de forma positiva, agregadora e acolhedora. Não se omite, expressa suas opiniões mesmo quando contrária aos demais. Sabe dizer não.'},
+    {key:'humildade', code:'HU', label:'Humildade',
+      desc:'Sabe ouvir, é atencioso, considera a opinião dos outros, não importa quem fez, importa que fizemos. Não tem vergonha de perguntar nem de dizer que não sabe. Não é arrogante nem vaidoso e age com respeito. Prioriza o nós e não o eu.'}
+  ];
+
+  var JBS_VALUES_CLIENT = [
+    {key:'atitude_dono', code:'AD', label:'Atitude de dono',
+      desc:'Assume a responsabilidade pelo atendimento, resolve o problema até o fim e cuida dos recursos da área como se fossem seus.'},
+    {key:'determinacao', code:'DT', label:'Determinação',
+      desc:'Entrega o que promete, corre atrás de solução quando aparece dificuldade e cumpre os prazos combinados com a área.'},
+    {key:'disciplina', code:'DC', label:'Disciplina',
+      desc:'É pontual, organizado, segue os procedimentos e prazos combinados com a área solicitante.'},
+    {key:'disponibilidade', code:'DP', label:'Disponibilidade',
+      desc:'Está acessível quando é preciso, atende prontamente e se adapta a mudanças de prioridade.'},
+    {key:'simplicidade', code:'SI', label:'Simplicidade',
+      desc:'Resolve as demandas de forma prática e direta, sem burocracia desnecessária.'},
+    {key:'franqueza', code:'FR', label:'Franqueza',
+      desc:'Comunica com transparência prazos, riscos e limitações, sempre com respeito.'},
+    {key:'humildade', code:'HU', label:'Humildade',
+      desc:'Ouve as necessidades da área com atenção e aceita bem sugestões e feedback.'}
+  ];
+
+  var SCALE = [
+    {v:1, label:'Abaixo do Esperado'},
+    {v:2, label:'Necessidade de Desenvolvimento'},
+    {v:3, label:'Dentro do Esperado'},
+    {v:4, label:'Acima do Esperado'},
+    {v:5, label:'Comportamento Excepcional'}
+  ];
+
+  var AREAS_CLIENTE = ['Comercial', 'Logística', 'Indústria', 'Gestão'];
+
+  var MODULES = {
+    cliente: {title:'Cliente Interno → Técnico', sub:'Comercial, Logística, Indústria e Gestão avaliam o atendimento dos técnicos.'}
+  };
+
+  var MIN_COMMENT_CHARS = 30;
+  function isCommentValid(text){
+    return !!(text && text.trim().length >= MIN_COMMENT_CHARS);
+  }
+  function commentCounterText(text){
+    var len = (text||'').trim().length;
+    if(len >= MIN_COMMENT_CHARS) return 'Comentário válido (' + len + ' caracteres).';
+    return 'Mínimo de ' + MIN_COMMENT_CHARS + ' caracteres — escreva uma frase completa (faltam ' + (MIN_COMMENT_CHARS - len) + ').';
+  }
+  // Comentário por valor: obrigatório apenas quando a nota é baixa (1 ou 2)
+  function valueCommentRequired(rating){
+    return !!rating && rating < 3;
+  }
+  function valueCommentRequirementText(rating, text){
+    if(!rating) return 'Selecione uma nota. O comentário é obrigatório apenas se a nota for 1 ou 2.';
+    if(valueCommentRequired(rating)){
+      var len = (text||'').trim().length;
+      if(len >= MIN_COMMENT_CHARS) return 'Comentário válido (' + len + ' caracteres).';
+      return 'Nota baixa: comentário obrigatório — mínimo de ' + MIN_COMMENT_CHARS + ' caracteres (faltam ' + (MIN_COMMENT_CHARS - len) + ').';
+    }
+    return 'Comentário opcional para esta nota.';
+  }
+  function isValueEntryValid(rating, text){
+    if(!rating) return false;
+    if(valueCommentRequired(rating)) return isCommentValid(text);
+    return true;
+  }
+
+  var SATISFACAO_LABELS = {1:'Muito insatisfeito', 2:'Insatisfeito', 3:'Neutro', 4:'Satisfeito', 5:'Muito satisfeito'};
+  var CLIENTE_PERGUNTA_ABERTA = {
+    key: 'expectativaGQ',
+    texto: 'O que você espera da equipe de GQ para que nossa atuação seja cada vez mais próxima, ágil e relevante para os resultados da sua área?'
+  };
+
+  var DEFAULT_TECNICOS = [
+    'Adil Oliveira De Aguiar',
+    'Aline Martins Pereira Nunes',
+    'Barbara Del Corso Pileckas',
+    'Cileia Sommer Bulling',
+    'Douglas Vinicius Silva de Sá',
+    'Evaristo Yoshinobo Kanashiro Junior',
+    'Ewerton Oliveira das Chagas',
+    'Fernando Sergio de Almeida Silva',
+    'Jackeline Prates Soledade',
+    'Janmille Monteiro Marcelo',
+    'Lais Alonso De Souza',
+    'Lorena Borges Fiuza',
+    'Matheus Bizzari',
+    'Melina Cecília de Oliveira Rizzato',
+    'Nívea Maria Carneiro',
+    'Rayane Guimaraes Vasconcelos',
+    'Thais Barbosa',
+    'Thiago Ribeiro Fagundes'
+  ];
+
+  // ============ CONFIGURAÇÃO DO BACKEND (Google Apps Script) ============
+  // Use A MESMA URL do Apps Script configurada no arquivo da equipe —
+  // é o mesmo backend, só muda a aba (sheet) usada.
+  var API_URL = 'https://script.google.com/macros/s/AKfycbzmepZXN4UgLb8TCc0olo8m9UH-AYr47bcauZj2KNHfDkZo2iSTiyPeixrLASu5mgB2/exec';
+  var RESULTADOS_PASSCODE = 'pollyanna2026'; // igual ao SECRET_KEY do apps-script-backend.gs
+  var SHEET_TECNICOS = 'ClienteTecnicos';
+  var SHEET_EVAL = 'ClienteEvaluations';
+
+  // ---------------- State ----------------
+  var state = {
+    tab: 'home',
+    roster: {tecnicos: []},
+    evaluations: [],
+    loading: true,
+    canSeeResults: false,
+    canEditRoster: false,
+    formDraft: {} // per-tab in-progress ratings
+  };
+
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+
+  var API_OK = API_URL.indexOf('COLE_AQUI') === -1;
+
+  async function apiCall(payload){
+    var res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify(payload)
+    });
+    return res.json();
+  }
+
+  // ---------------- Storage (Google Apps Script + Planilha) ----------------
+  async function loadAll(){
+    if(!API_OK){ state.loading = false; render(); return; }
+    try{
+      var rt = await apiCall({action:'getRoster', sheet: SHEET_TECNICOS});
+      state.roster.tecnicos = (rt && rt.ok && rt.names && rt.names.length) ? rt.names : DEFAULT_TECNICOS.slice();
+      if(!rt || !rt.ok || !rt.names || !rt.names.length){
+        try{ await apiCall({action:'setRoster', sheet: SHEET_TECNICOS, key: RESULTADOS_PASSCODE, names: state.roster.tecnicos}); }catch(e){}
+      }
+    }catch(e){
+      console.error('load error', e);
+    }
+    state.loading = false;
+    render();
+  }
+
+  async function saveRoster(kind){
+    if(!API_OK) return;
+    try{
+      await apiCall({action:'setRoster', sheet: SHEET_TECNICOS, key: RESULTADOS_PASSCODE, names: state.roster[kind]});
+    }catch(e){ console.error('save roster error', e); }
+  }
+
+  async function saveEvaluation(record){
+    if(!API_OK) return false;
+    try{
+      var r = await apiCall({action:'addEvaluation', sheet: SHEET_EVAL, data: record});
+      return !!(r && r.ok);
+    }catch(e){ console.error('save eval error', e); return false; }
+  }
+
+  async function fetchAllEvaluations(){
+    if(!API_OK) return [];
+    try{
+      var r = await apiCall({action:'getAllEvaluations', sheet: SHEET_EVAL, key: RESULTADOS_PASSCODE});
+      if(r && r.error === 'unauthorized') return null;
+      return (r && r.ok && r.records) ? r.records : [];
+    }catch(e){ console.error(e); return []; }
+  }
+
+  // ---------------- Render root ----------------
+  function render(){
+    document.querySelectorAll('#nav button').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-tab') === state.tab);
+    });
+    var main = document.getElementById('main');
+    if(state.loading){ main.innerHTML = '<p class="empty">Carregando…</p>'; return; }
+    if(state.tab === 'home') return renderHome(main);
+    if(state.tab === 'cliente') return renderClienteForm(main);
+    if(state.tab === 'resultados') return renderResultados(main);
+    if(state.tab === 'equipe') return renderEquipe(main);
+  }
+
+  document.getElementById('nav').addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-tab]');
+    if(!btn) return;
+    state.tab = btn.getAttribute('data-tab');
+    render();
+  });
+
+  // ---------------- Home ----------------
+  function renderHome(main){
+    var counts = {cliente:0};
+    if(state.canSeeResults){
+      state.evaluations.forEach(function(e){ if(counts[e.type]!==undefined) counts[e.type]++; });
+    }
+
+    main.innerHTML =
+      '<p class="eyebrow">Cultura JBS/Friboi</p>' +
+      '<h1 class="page-title">Avaliação de Técnicos pelo Cliente Interno</h1>' +
+      '<p class="page-sub">Comercial, Logística e Indústria avaliam o atendimento prestado pelos técnicos, com base nos 7 valores do formulário oficial (F-PRESI-RH-0071), adaptados ao contexto de atendimento.</p>' +
+
+      (state.canSeeResults ?
+        '<div class="stat-row">' +
+          statCard(counts.cliente, 'avaliações registradas') +
+        '</div>'
+        : '') +
+
+      '<div class="module-grid" id="modGrid">' +
+        moduleCard('cliente', 'Avaliar', MODULES.cliente.title, MODULES.cliente.sub) +
+      '</div>' +
+
+      '<div class="section">' +
+        '<div class="section-title"><span class="section-num">V</span>Os 7 valores avaliados</div>' +
+        '<p class="section-help">Versão adaptada dos valores JBS para o contexto de atendimento ao cliente interno.</p>' +
+        '<div class="legend-grid">' +
+          JBS_VALUES_CLIENT.map(function(v){
+            return '<div class="legend-item"><div class="value-badge" style="width:28px;height:28px;font-size:10px;">'+v.code+'</div>' +
+              '<div><div style="font-weight:600;font-size:13px;">'+v.label+'</div></div></div>';
+          }).join('') +
+        '</div>' +
+      '</div>' +
+
+      (!API_OK ? '<div class="banner err" style="margin-top:22px;">A URL do backend (Apps Script) ainda não foi configurada em API_URL — nada será salvo até isso ser feito.</div>' : '');
+
+    main.querySelectorAll('.module-card').forEach(function(el){
+      el.addEventListener('click', function(){ state.tab = el.getAttribute('data-mod'); render(); });
+    });
+  }
+
+  function statCard(num, label){
+    return '<div class="stat"><div class="num">'+num+'</div><div class="lab">'+label+'</div></div>';
+  }
+  function moduleCard(id, tag, title, sub){
+    return '<div class="module-card" data-mod="'+id+'"><div class="tag">'+tag+'</div><h3>'+title+'</h3><p>'+sub+'</p></div>';
+  }
+
+  // ---------------- Rating form builder ----------------
+  function buildValueBlocks(values, ratings, comments){
+    return values.map(function(v){
+      var sel = ratings[v.key];
+      var cText = comments[v.key] || '';
+      var required = valueCommentRequired(sel);
+      return (
+        '<div class="value-card" data-vkey="'+v.key+'">' +
+          '<div class="value-head">' +
+            '<div class="value-badge">'+v.code+'</div>' +
+            '<div><p class="value-name">'+v.label+'</p><p class="value-desc">'+v.desc+'</p></div>' +
+          '</div>' +
+          '<div class="scale">' +
+            SCALE.map(function(s){
+              return '<button type="button" class="scale-btn'+(sel===s.v?' sel':'')+'" data-vkey="'+v.key+'" data-val="'+s.v+'"><span class="n">'+s.v+'</span></button>';
+            }).join('') +
+          '</div>' +
+          '<div class="scale-caption">'+(sel ? SCALE[sel-1].label : 'Selecione uma nota de 1 a 5') +'</div>' +
+          '<div class="value-comment">' +
+            '<textarea class="vc-textarea" data-vkey="'+v.key+'" placeholder="'+(required ? 'Nota baixa: explique o motivo (mínimo '+MIN_COMMENT_CHARS+' caracteres)...' : 'Comentário opcional...')+'">'+escapeHtml(cText)+'</textarea>' +
+            '<div class="value-comment-counter'+(isValueEntryValid(sel,cText)?' ok':'')+'" data-vkey="'+v.key+'">'+valueCommentRequirementText(sel, cText)+'</div>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join('');
+  }
+
+  function wireValueBlocks(container, ratings, comments, formKey){
+    container.querySelectorAll('.scale-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var vkey = btn.getAttribute('data-vkey');
+        var val = parseInt(btn.getAttribute('data-val'), 10);
+        ratings[vkey] = val;
+        var card = container.querySelector('.value-card[data-vkey="'+vkey+'"]');
+        card.querySelectorAll('.scale-btn').forEach(function(b){
+          b.classList.toggle('sel', parseInt(b.getAttribute('data-val'),10) === val);
+        });
+        card.querySelector('.scale-caption').textContent = SCALE[val-1].label;
+        var ta = card.querySelector('.vc-textarea');
+        var required = valueCommentRequired(val);
+        ta.placeholder = required ? 'Nota baixa: explique o motivo (mínimo '+MIN_COMMENT_CHARS+' caracteres)...' : 'Comentário opcional...';
+        var counter = card.querySelector('.value-comment-counter');
+        counter.textContent = valueCommentRequirementText(val, comments[vkey]);
+        counter.classList.toggle('ok', isValueEntryValid(val, comments[vkey]));
+        updateSubmitState(formKey);
+      });
+    });
+    container.querySelectorAll('.vc-textarea').forEach(function(ta){
+      ta.addEventListener('input', function(){
+        var vkey = ta.getAttribute('data-vkey');
+        comments[vkey] = ta.value;
+        var counter = container.querySelector('.value-comment-counter[data-vkey="'+vkey+'"]');
+        counter.textContent = valueCommentRequirementText(ratings[vkey], ta.value);
+        counter.classList.toggle('ok', isValueEntryValid(ratings[vkey], ta.value));
+        updateSubmitState(formKey);
+      });
+    });
+  }
+
+  function updateSubmitState(formKey){
+    var btn = document.getElementById('submitBtn');
+    if(!btn) return;
+    btn.disabled = !isFormValid(formKey);
+  }
+
+  function isFormValid(formKey){
+    var d = state.formDraft[formKey] || {};
+    var values = JBS_VALUES_CLIENT;
+    var allValuesOk = values.every(function(v){ return d.ratings && isValueEntryValid(d.ratings[v.key], d.comentarios && d.comentarios[v.key]); });
+    if(formKey === 'cliente'){
+      var satisfacaoOk = !!(d.satisfacaoGQ && d.satisfacaoGQ >= 1 && d.satisfacaoGQ <= 5);
+      var expectativaOk = isCommentValid(d.expectativaGQ);
+      return allValuesOk && satisfacaoOk && expectativaOk && d.area && d.avaliado;
+    }
+    return false;
+  }
+
+  function avgOf(ratingsObj, values){
+    var keys = values.map(function(v){return v.key;});
+    var sum = 0, n = 0;
+    keys.forEach(function(k){ if(ratingsObj[k]){ sum += ratingsObj[k]; n++; } });
+    return n ? (sum/n) : 0;
+  }
+
+  function renderClienteForm(main){
+    if(!state.formDraft.cliente) state.formDraft.cliente = {ratings:{}, comentarios:{}, area:'', avaliadorNome:'', avaliado:'', satisfacaoGQ:null, expectativaGQ:'', comentario:''};
+    var d = state.formDraft.cliente;
+    var tecnicos = state.roster.tecnicos;
+
+    main.innerHTML =
+      '<p class="eyebrow">Módulo 3</p>' +
+      '<h1 class="page-title">Cliente Interno → Técnico</h1>' +
+      '<p class="page-sub">Comercial, Logística, Indústria e Gestão avaliam o atendimento prestado pelos técnicos, com base nos valores JBS aplicados ao relacionamento com o cliente interno.</p>' +
+
+      (tecnicos.length < 1 ? '<div class="banner info">Cadastre ao menos um(a) técnico(a) na aba <b>Equipe</b> antes de iniciar.</div>' : '') +
+
+      '<div class="section">' +
+        '<div class="section-title"><span class="section-num">1</span>Quem está avaliando e quem é avaliado</div>' +
+        '<div class="field-row">' +
+          selectField('Sua área', 'sel-area', AREAS_CLIENTE, d.area) +
+          textField('Seu nome (opcional)', 'inp-nome', d.avaliadorNome, 'Ex: Maria Souza') +
+        '</div>' +
+        '<div class="field-row">' +
+          selectField('Técnico(a) avaliado(a)', 'sel-avaliado', tecnicos, d.avaliado) +
+        '</div>' +
+      '</div>' +
+
+      '<div class="section">' +
+        '<div class="section-title"><span class="section-num">2</span>Aderência aos valores no atendimento</div>' +
+        '<p class="section-help">Considere: 1- Abaixo do Esperado · 2- Necessidade de Desenvolvimento · 3- Dentro do Esperado · 4- Acima do Esperado · 5- Comportamento Excepcional. O comentário só é obrigatório quando a nota for 1 ou 2.</p>' +
+        '<div id="valueBlocks">' + buildValueBlocks(JBS_VALUES_CLIENT, d.ratings, d.comentarios) + '</div>' +
+      '</div>' +
+
+      '<div class="section">' +
+        '<div class="section-title"><span class="section-num">3</span>Sobre a equipe de GQ</div>' +
+        '<div class="value-card">' +
+          '<p class="value-name" style="margin-bottom:10px;">Em uma escala de 1 a 5, qual o seu nível de satisfação com o atendimento, suporte e parceria oferecidos pela equipe de GQ?</p>' +
+          '<div class="scale" id="satisfacaoScale">' +
+            [1,2,3,4,5].map(function(n){
+              return '<button type="button" class="scale-btn'+(d.satisfacaoGQ===n?' sel':'')+'" data-val="'+n+'"><span class="n">'+n+'</span></button>';
+            }).join('') +
+          '</div>' +
+          '<div class="scale-caption" id="satisfacaoCaption">'+(d.satisfacaoGQ ? SATISFACAO_LABELS[d.satisfacaoGQ] : '1 — Muito insatisfeito · 5 — Muito satisfeito')+'</div>' +
+        '</div>' +
+        '<div class="value-card">' +
+          '<p class="value-name" style="margin-bottom:10px;">'+CLIENTE_PERGUNTA_ABERTA.texto+'</p>' +
+          '<div class="value-comment">' +
+            '<textarea id="ta-expectativaGQ" placeholder="Escreva sua resposta (mínimo '+MIN_COMMENT_CHARS+' caracteres)...">'+escapeHtml(d.expectativaGQ||'')+'</textarea>' +
+            '<div class="value-comment-counter'+(isCommentValid(d.expectativaGQ)?' ok':'')+'" id="expectativaCounter">'+commentCounterText(d.expectativaGQ)+'</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="section">' +
+        '<div class="section-title"><span class="section-num">4</span>Comentário geral (opcional)</div>' +
+        '<textarea id="comentario" placeholder="Detalhe uma situação de atendimento, prazo ou comunicação...">'+ (d.comentario||'') +'</textarea>' +
+      '</div>' +
+
+      '<div id="formMsg"></div>' +
+      '<div style="margin-top:22px;"><button class="btn" id="submitBtn" disabled>Enviar avaliação</button></div>';
+
+    main.querySelector('#sel-area').addEventListener('change', function(e){ d.area = e.target.value; updateSubmitState('cliente'); });
+    main.querySelector('#inp-nome').addEventListener('input', function(e){ d.avaliadorNome = e.target.value; });
+    main.querySelector('#sel-avaliado').addEventListener('change', function(e){ d.avaliado = e.target.value; updateSubmitState('cliente'); });
+    main.querySelector('#comentario').addEventListener('input', function(e){ d.comentario = e.target.value; });
+    wireValueBlocks(main.querySelector('#valueBlocks'), d.ratings, d.comentarios, 'cliente');
+
+    main.querySelectorAll('#satisfacaoScale .scale-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var val = parseInt(btn.getAttribute('data-val'), 10);
+        d.satisfacaoGQ = val;
+        main.querySelectorAll('#satisfacaoScale .scale-btn').forEach(function(b){
+          b.classList.toggle('sel', parseInt(b.getAttribute('data-val'),10) === val);
+        });
+        main.querySelector('#satisfacaoCaption').textContent = SATISFACAO_LABELS[val];
+        updateSubmitState('cliente');
+      });
+    });
+
+    main.querySelector('#ta-expectativaGQ').addEventListener('input', function(e){
+      d.expectativaGQ = e.target.value;
+      var counter = main.querySelector('#expectativaCounter');
+      counter.textContent = commentCounterText(e.target.value);
+      counter.classList.toggle('ok', isCommentValid(e.target.value));
+      updateSubmitState('cliente');
+    });
+
+    updateSubmitState('cliente');
+
+    main.querySelector('#submitBtn').addEventListener('click', async function(){
+      if(!isFormValid('cliente')) return;
+      var record = {
+        id: uid(), type: 'cliente', ts: Date.now(),
+        area: d.area, avaliador: d.avaliadorNome || (d.area + ' (não identificado)'),
+        avaliado: d.avaliado, ratings: Object.assign({}, d.ratings),
+        comentariosValores: Object.assign({}, d.comentarios),
+        satisfacaoGQ: d.satisfacaoGQ, expectativaGQ: d.expectativaGQ || '',
+        comentario: d.comentario || ''
+      };
+      var ok = await saveEvaluation(record);
+      if(ok){
+        state.formDraft.cliente = {ratings:{}, comentarios:{}, area:'', avaliadorNome:'', avaliado:'', satisfacaoGQ:null, expectativaGQ:'', comentario:''};
+        renderClienteForm(main);
+        showMsg(main, 'ok', 'Avaliação registrada. Obrigado pelo feedback sobre '+record.avaliado+'.');
+      } else {
+        showMsg(main, 'err', 'Não foi possível salvar agora. Tente novamente.');
+      }
+    });
+  }
+
+  function showMsg(main, kind, text){
+    var el = main.querySelector('#formMsg');
+    if(!el) return;
+    el.innerHTML = '<div class="banner'+(kind==='err'?' err':'')+'">'+text+'</div>';
+  }
+
+  function selectField(label, id, options, selected){
+    return '<div class="field"><label>'+label+'</label><select id="'+id+'">' +
+      '<option value="">Selecione…</option>' +
+      options.map(function(o){ return '<option value="'+o+'"'+(o===selected?' selected':'')+'>'+o+'</option>'; }).join('') +
+      '</select></div>';
+  }
+  function textField(label, id, value, placeholder){
+    return '<div class="field"><label>'+label+'</label><input type="text" id="'+id+'" value="'+(value||'').replace(/"/g,'&quot;')+'" placeholder="'+placeholder+'"></div>';
+  }
+
+  function renderAdminGate(main, title, sub, onUnlock){
+    main.innerHTML =
+      '<p class="eyebrow">Área restrita</p>' +
+      '<h1 class="page-title">'+title+'</h1>' +
+      '<p class="page-sub">'+sub+'</p>' +
+      '<div class="section" style="max-width:340px;">' +
+        '<div class="field"><label>Código de acesso</label><input type="text" id="gate-pass" placeholder="••••••••"></div>' +
+        '<div id="gateMsg" style="margin-top:12px;"></div>' +
+        '<div style="margin-top:16px;"><button class="btn" id="gate-btn">Entrar</button></div>' +
+      '</div>';
+    function tryUnlock(){
+      var val = main.querySelector('#gate-pass').value.trim();
+      if(val === RESULTADOS_PASSCODE){
+        onUnlock();
+      } else {
+        main.querySelector('#gateMsg').innerHTML = '<div class="banner err">Código incorreto.</div>';
+      }
+    }
+    main.querySelector('#gate-btn').addEventListener('click', tryUnlock);
+    main.querySelector('#gate-pass').addEventListener('keydown', function(e){ if(e.key === 'Enter') tryUnlock(); });
+  }
+
+  // ---------------- Resultados ----------------
+  function renderResultados(main){
+    if(!state.canSeeResults){
+      renderAdminGate(main, 'Resultados', 'Os resultados desta avaliação são visíveis apenas para a gestão. Informe o código de acesso para continuar.', async function(){
+        main.innerHTML = '<p class="empty">Carregando…</p>';
+        var recs = await fetchAllEvaluations();
+        if(recs === null){
+          renderResultados(main);
+          var msg = main.querySelector('#gateMsg');
+          if(msg) msg.innerHTML = '<div class="banner err">O código bate localmente, mas o backend recusou — confira se RESULTADOS_PASSCODE e SECRET_KEY são iguais.</div>';
+          return;
+        }
+        state.evaluations = recs || [];
+        state.canSeeResults = true;
+        state.canEditRoster = true;
+        render();
+      });
+      return;
+    }
+    var tipo = 'cliente';
+    var pessoas = pessoasParaTipo(tipo);
+    if(!state.resFiltroPessoa || pessoas.indexOf(state.resFiltroPessoa) === -1){
+      state.resFiltroPessoa = pessoas[0] || '';
+    }
+    var pessoa = state.resFiltroPessoa;
+
+    var recs = state.evaluations.filter(function(e){ return e.type === tipo && e.avaliado === pessoa; });
+    var values = tipo === 'cliente' ? JBS_VALUES_CLIENT : JBS_VALUES;
+    var perValueAvg = {};
+    values.forEach(function(v){
+      var nums = recs.map(function(r){ return r.ratings[v.key]; }).filter(Boolean);
+      perValueAvg[v.key] = nums.length ? (nums.reduce(function(a,b){return a+b;},0)/nums.length) : 0;
+    });
+    var overall = values.length ? (values.reduce(function(s,v){return s+perValueAvg[v.key];},0)/values.length) : 0;
+
+    main.innerHTML =
+      '<p class="eyebrow">Painel</p>' +
+      '<h1 class="page-title">Resultados</h1>' +
+      '<p class="page-sub">Médias agregadas por técnico(a), nos 7 valores JBS aplicados ao atendimento.</p>' +
+
+      '<div class="filter-bar">' +
+        selectField('Técnico(a) avaliado(a)', 'sel-pessoa', pessoas, pessoa) +
+      '</div>' +
+
+      (recs.length === 0
+        ? '<p class="empty">Nenhuma avaliação registrada ainda para essa seleção.</p>'
+        : (
+          '<div class="result-head">' +
+            '<div class="stamp"><span class="val">'+overall.toFixed(1)+'</span><span class="lab">Média geral</span></div>' +
+            '<div class="meta">' +
+              '<div><b>'+(pessoa||'—')+'</b> · '+labelTipo(tipo)+'</div>' +
+              '<div>'+recs.length+' avaliação(ões) recebida(s)</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="section" style="border-top:none;padding-top:0;margin-top:0;">' +
+            '<div class="section-title" style="margin-bottom:14px;"><span class="section-num">V</span>Média por valor</div>' +
+            values.map(function(v){
+              var pct = (perValueAvg[v.key]/5*100).toFixed(0);
+              return '<div class="bar-row"><div class="lbl">'+v.label+'</div><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%"></div></div><div class="v">'+perValueAvg[v.key].toFixed(1)+'</div></div>';
+            }).join('') +
+          '</div>' +
+          '<div class="section">' +
+            '<div class="section-title"><span class="section-num">S</span>Satisfação com a equipe de GQ</div>' +
+            (function(){
+              var sats = recs.map(function(r){ return r.satisfacaoGQ; }).filter(function(n){ return n>=1 && n<=5; });
+              if(sats.length === 0) return '<p class="empty">Sem respostas ainda.</p>';
+              var avgSat = sats.reduce(function(a,b){return a+b;},0)/sats.length;
+              var pct = (avgSat/5*100).toFixed(0);
+              return '<div class="bar-row"><div class="lbl">Satisfação média</div><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%"></div></div><div class="v">'+avgSat.toFixed(1)+'</div></div>';
+            })() +
+          '</div>' +
+          '<div class="section">' +
+            '<div class="section-title"><span class="section-num">E</span>Expectativas para a equipe de GQ</div>' +
+            (recs.filter(function(r){return r.expectativaGQ;}).length === 0
+              ? '<p class="empty">Sem respostas ainda.</p>'
+              : recs.filter(function(r){return r.expectativaGQ;}).map(function(r){
+                  return '<div class="comment-item"><div class="src">'+commentSource(r)+' · '+formatDate(r.ts)+'</div>'+escapeHtml(r.expectativaGQ)+'</div>';
+                }).join('')
+            ) +
+          '</div>' +
+          '<div class="section">' +
+            '<div class="section-title"><span class="section-num">C</span>Comentário geral</div>' +
+            (recs.filter(function(r){return r.comentario;}).length === 0
+              ? '<p class="empty">Sem comentários gerais nesta seleção.</p>'
+              : recs.filter(function(r){return r.comentario;}).map(function(r){
+                  return '<div class="comment-item"><div class="src">'+commentSource(r)+' · '+formatDate(r.ts)+'</div>'+escapeHtml(r.comentario)+'</div>';
+                }).join('')
+            ) +
+          '</div>' +
+          '<div class="section">' +
+            '<div class="section-title"><span class="section-num">D</span>Comentários por valor</div>' +
+            values.map(function(v){
+              var comments = recs.filter(function(r){ return r.comentariosValores && r.comentariosValores[v.key]; });
+              if(comments.length === 0) return '';
+              return '<p style="font-weight:600;font-size:13px;margin:16px 0 4px;">'+v.label+'</p>' +
+                comments.map(function(r){
+                  return '<div class="comment-item"><div class="src">'+commentSource(r)+' · '+formatDate(r.ts)+' · nota '+r.ratings[v.key]+'</div>'+escapeHtml(r.comentariosValores[v.key])+'</div>';
+                }).join('');
+            }).join('') +
+          '</div>'
+        )
+      );
+
+    var selPessoa = main.querySelector('#sel-pessoa');
+    if(selPessoa){
+      selPessoa.addEventListener('change', function(e){
+        state.resFiltroPessoa = e.target.value;
+        renderResultados(main);
+      });
+    }
+  }
+
+  function pessoasParaTipo(tipo){
+    return state.roster.tecnicos.slice();
+  }
+  function labelTipo(t){
+    return 'Cliente Interno → Técnico';
+  }
+  function commentSource(r){
+    return r.area || 'Cliente interno';
+  }
+  function formatDate(ts){
+    var d = new Date(ts);
+    return d.toLocaleDateString('pt-BR');
+  }
+  function escapeHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ---------------- Equipe (roster mgmt) ----------------
+  function renderEquipe(main){
+    main.innerHTML =
+      '<p class="eyebrow">Configuração</p>' +
+      '<h1 class="page-title">Técnicos</h1>' +
+      '<p class="page-sub">Nomes dos técnicos avaliados pelos clientes internos (Comercial, Logística e Indústria).' +
+      (state.canEditRoster ? '' : ' Esta lista é gerenciada pela gestão.') + '</p>' +
+      '<div class="roster-cols">' +
+        rosterCol('tecnicos', 'Técnicos', 'Avaliados por Comercial, Logística e Indústria.') +
+      '</div>' +
+      (state.canEditRoster ? '' :
+        '<div class="section"><div class="field" style="max-width:300px;">' +
+          '<label>Código de acesso da gestão (para editar)</label>' +
+          '<input type="text" id="equipe-gate-pass" placeholder="••••••••">' +
+          '<div id="equipeGateMsg" style="margin-top:8px;"></div>' +
+          '<div style="margin-top:12px;"><button class="btn small" id="equipe-gate-btn">Desbloquear edição</button></div>' +
+        '</div></div>'
+      );
+
+    if(!state.canEditRoster){
+      var gateBtn = main.querySelector('#equipe-gate-btn');
+      if(gateBtn){
+        gateBtn.addEventListener('click', function(){
+          var val = main.querySelector('#equipe-gate-pass').value.trim();
+          if(val === RESULTADOS_PASSCODE){
+            state.canEditRoster = true;
+            state.canSeeResults = true;
+            renderEquipe(main);
+          } else {
+            main.querySelector('#equipeGateMsg').innerHTML = '<div class="banner err">Código incorreto.</div>';
+          }
+        });
+      }
+      return;
+    }
+
+    ['tecnicos'].forEach(function(kind){
+      var addBtn = main.querySelector('#add-'+kind);
+      var input = main.querySelector('#inp-'+kind);
+      function doAdd(){
+        var name = input.value.trim();
+        if(!name) return;
+        if(state.roster[kind].indexOf(name) !== -1){ input.value=''; return; }
+        state.roster[kind].push(name);
+        saveRoster(kind);
+        input.value = '';
+        renderEquipe(main);
+      }
+      addBtn.addEventListener('click', doAdd);
+      input.addEventListener('keydown', function(e){ if(e.key === 'Enter') doAdd(); });
+
+      main.querySelectorAll('.rm-'+kind).forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var name = btn.getAttribute('data-name');
+          state.roster[kind] = state.roster[kind].filter(function(n){ return n !== name; });
+          saveRoster(kind);
+          renderEquipe(main);
+        });
+      });
+    });
+  }
+
+  function rosterCol(kind, title, desc){
+    var list = state.roster[kind];
+    var editable = state.canEditRoster;
+    return (
+      '<div class="roster-col">' +
+        '<h3>'+title+'</h3><p class="desc">'+desc+'</p>' +
+        (editable ? '<div class="add-row"><input type="text" id="inp-'+kind+'" placeholder="Nome completo"><button class="btn small" id="add-'+kind+'">Adicionar</button></div>' : '') +
+        '<ul class="roster-list">' +
+          (list.length === 0 ? '<li style="color:var(--muted);border-style:dashed;">Nenhum nome cadastrado</li>' :
+            list.map(function(n){
+              return '<li>'+n+(editable ? '<button class="rm-'+kind+'" data-name="'+n.replace(/"/g,'&quot;')+'">remover</button>' : '')+'</li>';
+            }).join('')
+          ) +
+        '</ul>' +
+      '</div>'
+    );
+  }
+
+  // ---------------- Init ----------------
+  loadAll();
+})();
+</script>
+
+</body>
+</html>
