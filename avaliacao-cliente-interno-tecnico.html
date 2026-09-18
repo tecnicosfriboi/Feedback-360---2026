@@ -530,7 +530,8 @@
     if(formKey === 'cliente'){
       var satisfacaoOk = !!(d.satisfacaoGQ && d.satisfacaoGQ >= 1 && d.satisfacaoGQ <= 5);
       var expectativaOk = isCommentValid(d.expectativaGQ);
-      return allValuesOk && satisfacaoOk && expectativaOk && d.area && d.avaliado;
+      var nomeOk = !!(d.avaliadorNome && d.avaliadorNome.trim().length >= 3);
+      return allValuesOk && satisfacaoOk && expectativaOk && nomeOk && d.area && d.avaliado;
     }
     return false;
   }
@@ -558,7 +559,7 @@
         '<div class="section-title"><span class="section-num">1</span>Quem está avaliando e quem é avaliado</div>' +
         '<div class="field-row">' +
           selectField('Sua área', 'sel-area', AREAS_CLIENTE, d.area) +
-          textField('Seu nome (opcional)', 'inp-nome', d.avaliadorNome, 'Ex: Maria Souza') +
+          textField('Seu nome', 'inp-nome', d.avaliadorNome, 'Ex: Maria Souza') +
         '</div>' +
         '<div class="field-row">' +
           selectField('Técnico(a) avaliado(a)', 'sel-avaliado', tecnicos, d.avaliado) +
@@ -600,7 +601,7 @@
       '<div style="margin-top:22px;"><button class="btn" id="submitBtn" disabled>Enviar avaliação</button></div>';
 
     main.querySelector('#sel-area').addEventListener('change', function(e){ d.area = e.target.value; updateSubmitState('cliente'); });
-    main.querySelector('#inp-nome').addEventListener('input', function(e){ d.avaliadorNome = e.target.value; });
+    main.querySelector('#inp-nome').addEventListener('input', function(e){ d.avaliadorNome = e.target.value; updateSubmitState('cliente'); });
     main.querySelector('#sel-avaliado').addEventListener('change', function(e){ d.avaliado = e.target.value; updateSubmitState('cliente'); });
     main.querySelector('#comentario').addEventListener('input', function(e){ d.comentario = e.target.value; });
     wireValueBlocks(main.querySelector('#valueBlocks'), d.ratings, d.comentarios, 'cliente');
