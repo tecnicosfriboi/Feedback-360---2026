@@ -343,11 +343,10 @@
   var API_OK = API_URL.indexOf('COLE_AQUI') === -1;
 
   async function apiCall(payload){
-    var res = await fetch(API_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'text/plain;charset=utf-8'},
-      body: JSON.stringify(payload)
-    });
+    // GET com os dados na própria URL — Apps Script redireciona toda chamada,
+    // e um POST perderia o corpo nesse redirecionamento. GET sobrevive.
+    var url = API_URL + '?data=' + encodeURIComponent(JSON.stringify(payload));
+    var res = await fetch(url, { method: 'GET' });
     return res.json();
   }
 

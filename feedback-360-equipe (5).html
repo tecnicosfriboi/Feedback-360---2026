@@ -209,7 +209,6 @@
       <button data-tab="home">Painel</button>
       <button data-tab="auto">Autoavaliação</button>
       <button data-tab="pares">Avaliação entre Pares</button>
-      <button data-tab="gestao">Avaliação da Gestão</button>
       <button data-tab="avaliarequipe">Avaliar Equipe</button>
       <button data-tab="progresso">Meu Progresso</button>
       <button data-tab="resultados">Resultados</button>
@@ -252,7 +251,6 @@
   var MODULES = {
     auto: {title:'Autoavaliação', sub:'Você avalia a si mesmo(a) nos 7 valores JBS.'},
     pares: {title:'Avaliação entre Pares', sub:'Colegas de equipe se avaliam mutuamente com base nos 7 valores JBS.'},
-    gestao: {title:'Avaliação da Gestão', sub:'A equipe avalia seu(sua) gestor(a) com base nos mesmos 7 valores.'},
     avaliarequipe: {title:'Avaliar Equipe', sub:'A gestão avalia cada colaborador(a) nos 7 valores JBS.'}
   };
 
@@ -265,15 +263,6 @@
     if(len >= MIN_COMMENT_CHARS) return 'Comentário válido (' + len + ' caracteres).';
     return 'Mínimo de ' + MIN_COMMENT_CHARS + ' caracteres — escreva uma frase completa (faltam ' + (MIN_COMMENT_CHARS - len) + ').';
   }
-
-  var GESTAO_PERGUNTAS = [
-    {key:'comunicacao', label:'Comunicação, suporte e proximidade',
-      texto:'Como você avalia a comunicação, o suporte e a proximidade da liderança com a equipe?'},
-    {key:'determinacao_lideranca', label:'Determinação na liderança',
-      texto:'Pensando no valor "Determinação", o que a liderança pode fazer para incentivar a equipe a manter o foco, superar desafios e transformar os direcionamentos em ações e resultados?'},
-    {key:'atuacao_comercial', label:'Atuação estratégica com clientes e Comercial',
-      texto:'O que podemos fazer para tornar nossa atuação junto aos clientes e ao time Comercial mais próxima e estratégica, garantindo maior presença nas lojas, identificação de oportunidades e cumprimento dos direcionamentos da liderança?'}
-  ];
 
   var DEFAULT_COLABORADORES = [
     'Adil Oliveira De Aguiar',
@@ -324,11 +313,10 @@
   var API_OK = API_URL.indexOf('COLE_AQUI') === -1;
 
   async function apiCall(payload){
-    var res = await fetch(API_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'text/plain;charset=utf-8'},
-      body: JSON.stringify(payload)
-    });
+    // GET com os dados na própria URL — Apps Script redireciona toda chamada,
+    // e um POST perderia o corpo nesse redirecionamento. GET sobrevive.
+    var url = API_URL + '?data=' + encodeURIComponent(JSON.stringify(payload));
+    var res = await fetch(url, { method: 'GET' });
     return res.json();
   }
 
@@ -395,7 +383,6 @@
     if(state.tab === 'home') return renderHome(main);
     if(state.tab === 'auto') return renderAutoForm(main);
     if(state.tab === 'pares') return renderPeerForm(main);
-    if(state.tab === 'gestao') return renderGestaoForm(main);
     if(state.tab === 'avaliarequipe') return renderGestaoTecnicoForm(main);
     if(state.tab === 'progresso') return renderProgresso(main);
     if(state.tab === 'resultados') return renderResultados(main);
@@ -411,7 +398,7 @@
 
   // ---------------- Home ----------------
   function renderHome(main){
-    var counts = {auto:0, pares:0, gestao:0};
+    var counts = {auto:0, pares:0};
     if(state.canSeeResults){
       state.evaluations.forEach(function(e){ if(counts[e.type]!==undefined) counts[e.type]++; });
     }
@@ -419,22 +406,20 @@
     main.innerHTML =
       '<p class="eyebrow">Cultura JBS/Friboi</p>' +
       '<h1 class="page-title">Feedback 360° baseado nos valores</h1>' +
-      '<p class="page-sub">Autoavaliação, avaliação entre pares e avaliação da gestão, ancoradas nos mesmos 7 valores do formulário oficial (F-PRESI-RH-0071), na escala de 1 a 5. A avaliação de cliente interno sobre os técnicos fica em outro link, separado deste.</p>' +
+      '<p class="page-sub">Autoavaliação e avaliação entre pares, ancoradas nos mesmos 7 valores do formulário oficial (F-PRESI-RH-0071), na escala de 1 a 5. A avaliação de cliente interno sobre os técnicos fica em outro link, separado deste.</p>' +
 
-      '<div class="banner">Para a rodada ser considerada completa, cada colaborador(a) precisa: avaliar <b>a si mesmo(a)</b>, avaliar <b>a gestão</b>, e avaliar <b>todos os colegas</b> de equipe. Use a aba <b>Meu Progresso</b> para acompanhar o que falta.</div>' +
+      '<div class="banner">Para a rodada ser considerada completa, cada colaborador(a) precisa: avaliar <b>a si mesmo(a)</b> e avaliar <b>todos os colegas</b> de equipe. Use a aba <b>Meu Progresso</b> para acompanhar o que falta.</div>' +
 
       (state.canSeeResults ?
         '<div class="stat-row">' +
           statCard(counts.auto, 'autoavaliações') +
           statCard(counts.pares, 'avaliações entre pares') +
-          statCard(counts.gestao, 'avaliações da gestão') +
         '</div>'
         : '') +
 
       '<div class="module-grid" id="modGrid">' +
         moduleCard('auto', 'Módulo 1', MODULES.auto.title, MODULES.auto.sub) +
         moduleCard('pares', 'Módulo 2', MODULES.pares.title, MODULES.pares.sub) +
-        moduleCard('gestao', 'Módulo 3', MODULES.gestao.title, MODULES.gestao.sub) +
       '</div>' +
 
       '<div class="section">' +
@@ -527,10 +512,6 @@
     var allCommented = values.every(function(v){ return d.comentarios && isCommentValid(d.comentarios[v.key]); });
     if(formKey === 'auto') return allRated && allCommented && d.avaliador;
     if(formKey === 'pares') return allRated && allCommented && d.avaliador && d.avaliado && d.avaliador !== d.avaliado;
-    if(formKey === 'gestao'){
-      var allPerguntas = GESTAO_PERGUNTAS.every(function(p){ return d.perguntas && isCommentValid(d.perguntas[p.key]); });
-      return allRated && allCommented && allPerguntas && d.avaliador && d.avaliado;
-    }
     if(formKey === 'avaliarequipe') return allRated && allCommented && d.avaliado;
     return false;
   }
@@ -605,7 +586,7 @@
     var colabs = state.roster.colaboradores;
 
     main.innerHTML =
-      '<p class="eyebrow">Módulo 1</p>' +
+      '<p class="eyebrow">Módulo 2</p>' +
       '<h1 class="page-title">Avaliação entre Pares</h1>' +
       '<p class="page-sub">Escolha um colega da sua equipe e avalie o comportamento dele(a) nos 7 valores JBS. Cada valor exige uma nota e um comentário justificando a nota. As respostas ficam visíveis apenas de forma agregada na aba Resultados.</p>' +
 
@@ -656,97 +637,6 @@
         state.formDraft.pares = {ratings:{}, comentarios:{}, avaliador:'', avaliado:'', comentario:''};
         renderPeerForm(main);
         showMsg(main, 'ok', 'Avaliação registrada. Obrigado pelo feedback a '+record.avaliado+'.');
-      } else {
-        showMsg(main, 'err', 'Não foi possível salvar agora. Tente novamente.');
-      }
-    });
-  }
-
-  // ---------------- Gestao form ----------------
-  function renderGestaoForm(main){
-    if(!state.formDraft.gestao) state.formDraft.gestao = {ratings:{}, comentarios:{}, perguntas:{}, avaliador:'', avaliado:'', comentario:''};
-    var d = state.formDraft.gestao;
-    var colabs = state.roster.colaboradores;
-    var gestores = state.roster.gestores;
-
-    main.innerHTML =
-      '<p class="eyebrow">Módulo 2</p>' +
-      '<h1 class="page-title">Avaliação da Gestão</h1>' +
-      '<p class="page-sub">A equipe avalia seu(sua) gestor(a) nos mesmos 7 valores JBS aplicados à liderança, mais 3 perguntas abertas. Cada valor e cada pergunta exige um comentário justificando a resposta.</p>' +
-
-      (gestores.length < 1 ? '<div class="banner info">Cadastre ao menos um(a) gestor(a) na aba <b>Equipe</b> antes de iniciar.</div>' : '') +
-
-      '<div class="section">' +
-        '<div class="section-title"><span class="section-num">1</span>Quem está avaliando e quem é avaliado</div>' +
-        '<div class="field-row">' +
-          selectField('Você (avaliador)', 'sel-avaliador', colabs, d.avaliador) +
-          selectField('Gestor(a) avaliado(a)', 'sel-avaliado', gestores, d.avaliado) +
-        '</div>' +
-      '</div>' +
-
-      '<div class="section">' +
-        '<div class="section-title"><span class="section-num">2</span>Aderência aos valores na liderança</div>' +
-        '<p class="section-help">Considere: 1- Abaixo do Esperado · 2- Necessidade de Desenvolvimento · 3- Dentro do Esperado · 4- Acima do Esperado · 5- Comportamento Excepcional. O comentário de cada valor é obrigatório.</p>' +
-        '<div id="valueBlocks">' + buildValueBlocks(JBS_VALUES, d.ratings, d.comentarios) + '</div>' +
-      '</div>' +
-
-      '<div class="section">' +
-        '<div class="section-title"><span class="section-num">3</span>Perguntas abertas sobre a liderança</div>' +
-        '<p class="section-help">Respostas obrigatórias, com no mínimo '+MIN_COMMENT_CHARS+' caracteres cada.</p>' +
-        '<div id="perguntasBlocks">' +
-          GESTAO_PERGUNTAS.map(function(p){
-            var txt = d.perguntas[p.key] || '';
-            return '<div class="value-card" data-pkey="'+p.key+'">' +
-              '<p class="value-name" style="margin-bottom:6px;">'+p.texto+'</p>' +
-              '<div class="value-comment">' +
-                '<textarea class="pg-textarea" data-pkey="'+p.key+'" placeholder="Escreva sua resposta (mínimo '+MIN_COMMENT_CHARS+' caracteres)...">'+escapeHtml(txt)+'</textarea>' +
-                '<div class="value-comment-counter'+(isCommentValid(txt)?' ok':'')+'" data-pkey="'+p.key+'">'+commentCounterText(txt)+'</div>' +
-              '</div>' +
-            '</div>';
-          }).join('') +
-        '</div>' +
-      '</div>' +
-
-      '<div class="section">' +
-        '<div class="section-title"><span class="section-num">4</span>Comentário geral (opcional)</div>' +
-        '<textarea id="comentario" placeholder="Percepções adicionais sobre a gestão, ambiente e liderança...">'+ (d.comentario||'') +'</textarea>' +
-      '</div>' +
-
-      '<div id="formMsg"></div>' +
-      '<div style="margin-top:22px;"><button class="btn" id="submitBtn" disabled>Enviar avaliação</button></div>';
-
-    main.querySelector('#sel-avaliador').addEventListener('change', function(e){ d.avaliador = e.target.value; updateSubmitState('gestao'); });
-    main.querySelector('#sel-avaliado').addEventListener('change', function(e){ d.avaliado = e.target.value; updateSubmitState('gestao'); });
-    main.querySelector('#comentario').addEventListener('input', function(e){ d.comentario = e.target.value; });
-    wireValueBlocks(main.querySelector('#valueBlocks'), d.ratings, d.comentarios, 'gestao');
-
-    main.querySelectorAll('.pg-textarea').forEach(function(ta){
-      ta.addEventListener('input', function(){
-        var pkey = ta.getAttribute('data-pkey');
-        d.perguntas[pkey] = ta.value;
-        var counter = main.querySelector('.value-comment-counter[data-pkey="'+pkey+'"]');
-        counter.textContent = commentCounterText(ta.value);
-        counter.classList.toggle('ok', isCommentValid(ta.value));
-        updateSubmitState('gestao');
-      });
-    });
-
-    updateSubmitState('gestao');
-
-    main.querySelector('#submitBtn').addEventListener('click', async function(){
-      if(!isFormValid('gestao')) return;
-      var record = {
-        id: uid(), type: 'gestao', ts: Date.now(),
-        avaliador: d.avaliador, avaliado: d.avaliado,
-        ratings: Object.assign({}, d.ratings), comentariosValores: Object.assign({}, d.comentarios),
-        perguntas: Object.assign({}, d.perguntas),
-        comentario: d.comentario || ''
-      };
-      var ok = await saveEvaluation(record);
-      if(ok){
-        state.formDraft.gestao = {ratings:{}, comentarios:{}, perguntas:{}, avaliador:'', avaliado:'', comentario:''};
-        renderGestaoForm(main);
-        showMsg(main, 'ok', 'Avaliação da gestão registrada. Obrigado pelo feedback.');
       } else {
         showMsg(main, 'err', 'Não foi possível salvar agora. Tente novamente.');
       }
@@ -873,18 +763,16 @@
     try{
       var docs = await fetchMyEvaluations(name);
       var hasAuto = docs.some(function(r){ return r.type === 'auto'; });
-      var hasGestao = docs.some(function(r){ return r.type === 'gestao'; });
       var paresFeitos = {};
       docs.forEach(function(r){ if(r.type==='pares') paresFeitos[r.avaliado] = true; });
       var colegas = state.roster.colaboradores.filter(function(n){ return n !== name; });
       var pendentes = colegas.filter(function(n){ return !paresFeitos[n]; });
       var feitos = colegas.length - pendentes.length;
-      var tudoOk = hasAuto && hasGestao && pendentes.length === 0;
+      var tudoOk = hasAuto && pendentes.length === 0;
 
       box.innerHTML =
         '<div class="section" style="border-top:none;padding-top:0;margin-top:22px;">' +
           checklistRow('Autoavaliação', hasAuto) +
-          checklistRow('Avaliação da Gestão', hasGestao) +
           checklistRow('Avaliação de Pares', feitos === colegas.length, feitos+' de '+colegas.length+' colegas avaliados') +
         '</div>' +
         (pendentes.length > 0 ?
@@ -913,17 +801,15 @@
     var rows = colabs.map(function(name){
       var meus = state.evaluations.filter(function(e){ return e.avaliador === name; });
       var hasAuto = meus.some(function(r){ return r.type === 'auto'; });
-      var hasGestao = meus.some(function(r){ return r.type === 'gestao'; });
       var paresFeitos = {};
       meus.forEach(function(r){ if(r.type==='pares') paresFeitos[r.avaliado] = true; });
       var totalColegas = colabs.length - 1;
       var feitos = Object.keys(paresFeitos).filter(function(n){ return n !== name; }).length;
       var avaliadaPorVoce = state.evaluations.some(function(e){ return e.type === 'gestao_tecnico' && e.avaliado === name; });
-      var completo = hasAuto && hasGestao && feitos >= totalColegas && avaliadaPorVoce;
+      var completo = hasAuto && feitos >= totalColegas && avaliadaPorVoce;
       return '<tr>' +
         '<td>'+name+'</td>' +
         '<td class="num" style="color:'+(hasAuto?'var(--ok)':'var(--accent)')+';">'+(hasAuto?'✓':'—')+'</td>' +
-        '<td class="num" style="color:'+(hasGestao?'var(--ok)':'var(--accent)')+';">'+(hasGestao?'✓':'—')+'</td>' +
         '<td class="num" style="color:'+(feitos>=totalColegas?'var(--ok)':'var(--accent)')+';">'+feitos+'/'+totalColegas+'</td>' +
         '<td class="num" style="color:'+(avaliadaPorVoce?'var(--ok)':'var(--accent)')+';">'+(avaliadaPorVoce?'✓':'—')+'</td>' +
         '<td class="num" style="color:'+(completo?'var(--ok)':'var(--accent)')+';font-weight:700;">'+(completo?'Completo':'Pendente')+'</td>' +
@@ -932,17 +818,16 @@
     var completos = colabs.filter(function(name){
       var meus = state.evaluations.filter(function(e){ return e.avaliador === name; });
       var hasAuto = meus.some(function(r){ return r.type === 'auto'; });
-      var hasGestao = meus.some(function(r){ return r.type === 'gestao'; });
       var paresFeitos = {};
       meus.forEach(function(r){ if(r.type==='pares') paresFeitos[r.avaliado] = true; });
       var feitos = Object.keys(paresFeitos).filter(function(n){ return n !== name; }).length;
       var avaliadaPorVoce = state.evaluations.some(function(e){ return e.type === 'gestao_tecnico' && e.avaliado === name; });
-      return hasAuto && hasGestao && feitos >= (colabs.length-1) && avaliadaPorVoce;
+      return hasAuto && feitos >= (colabs.length-1) && avaliadaPorVoce;
     }).length;
     return (
       '<div class="section" style="border-top:none;padding-top:0;margin-top:0;">' +
         '<div class="section-title" style="margin-bottom:10px;">Progresso da coleta ('+completos+' de '+colabs.length+' completos)</div>' +
-        '<table class="vtable"><thead><tr><th>Colaborador(a)</th><th>Autoavaliação</th><th>Gestão</th><th>Pares</th><th>Você avaliou</th><th>Status</th></tr></thead><tbody>' +
+        '<table class="vtable"><thead><tr><th>Colaborador(a)</th><th>Autoavaliação</th><th>Pares</th><th>Você avaliou</th><th>Status</th></tr></thead><tbody>' +
           rows +
         '</tbody></table>' +
       '</div>'
@@ -1014,7 +899,7 @@
       buildProgressoColeta() +
 
       '<div class="filter-bar">' +
-        selectField('Tipo de avaliação', 'sel-tipo', ['pares','gestao','gestao_tecnico'], tipo) +
+        selectField('Tipo de avaliação', 'sel-tipo', ['pares','gestao_tecnico'], tipo) +
         selectField('Pessoa avaliada', 'sel-pessoa', pessoas, pessoa) +
       '</div>' +
 
@@ -1054,27 +939,13 @@
                   return '<div class="comment-item"><div class="src">'+commentSource(r)+' · '+formatDate(r.ts)+' · nota '+r.ratings[v.key]+'</div>'+escapeHtml(r.comentariosValores[v.key])+'</div>';
                 }).join('');
             }).join('') +
-          '</div>' +
-          (tipo === 'gestao' ?
-            '<div class="section">' +
-              '<div class="section-title"><span class="section-num">P</span>Respostas às perguntas abertas</div>' +
-              GESTAO_PERGUNTAS.map(function(p){
-                var answered = recs.filter(function(r){ return r.perguntas && r.perguntas[p.key]; });
-                return '<p style="font-weight:600;font-size:13px;margin:16px 0 4px;">'+p.texto+'</p>' +
-                  (answered.length === 0 ? '<p class="empty">Sem respostas ainda.</p>' :
-                    answered.map(function(r){
-                      return '<div class="comment-item"><div class="src">'+commentSource(r)+' · '+formatDate(r.ts)+'</div>'+escapeHtml(r.perguntas[p.key])+'</div>';
-                    }).join('')
-                  );
-              }).join('') +
-            '</div>'
-            : '')
+          '</div>'
         )
       );
 
     // select shows readable label for tipo but underlying value is key — fix options
     var selTipo = main.querySelector('#sel-tipo');
-    selTipo.innerHTML = ['pares','gestao','gestao_tecnico'].map(function(t){
+    selTipo.innerHTML = ['pares','gestao_tecnico'].map(function(t){
       return '<option value="'+t+'"'+(t===tipo?' selected':'')+'>'+labelTipo(t)+'</option>';
     }).join('');
     selTipo.addEventListener('change', function(e){
@@ -1093,13 +964,11 @@
 
   function pessoasParaTipo(tipo){
     if(tipo === 'pares') return state.roster.colaboradores.slice();
-    if(tipo === 'gestao') return state.roster.gestores.slice();
     if(tipo === 'gestao_tecnico') return state.roster.colaboradores.slice();
     return [];
   }
   function labelTipo(t){
     if(t === 'pares') return 'Avaliação entre Pares';
-    if(t === 'gestao') return 'Avaliação da Gestão';
     if(t === 'gestao_tecnico') return 'Avaliação da Gestão sobre o(a) Colaborador(a)';
     return t;
   }
@@ -1119,11 +988,10 @@
     main.innerHTML =
       '<p class="eyebrow">Configuração</p>' +
       '<h1 class="page-title">Equipe</h1>' +
-      '<p class="page-sub">Colaboradores participam da avaliação entre pares, e gestores são avaliados no módulo 2.' +
+      '<p class="page-sub">Colaboradores participam da avaliação entre pares e da autoavaliação.' +
       (state.canEditRoster ? '' : ' Esta lista é gerenciada pela gestão.') + '</p>' +
       '<div class="roster-cols">' +
         rosterCol('colaboradores', 'Colaboradores', 'Participam da Avaliação entre Pares.') +
-        rosterCol('gestores', 'Gestores', 'Avaliados no módulo Avaliação da Gestão.') +
       '</div>' +
       (state.canEditRoster ? '' :
         '<div class="section"><div class="field" style="max-width:300px;">' +
@@ -1151,7 +1019,7 @@
       return;
     }
 
-    ['colaboradores','gestores'].forEach(function(kind){
+    ['colaboradores'].forEach(function(kind){
       var addBtn = main.querySelector('#add-'+kind);
       var input = main.querySelector('#inp-'+kind);
       function doAdd(){
