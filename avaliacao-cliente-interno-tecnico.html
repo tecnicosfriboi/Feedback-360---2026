@@ -366,6 +366,38 @@
     }catch(e){ console.error('save eval error', e); return false; }
   }
 
+  // ---------------- Evitar respostas duplicadas (mesma pessoa + mesmo técnico) ----------------
+  function semAcento(s){ return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+  function chaveNome(s){ return semAcento(s).trim().toLowerCase().replace(/\s+/g, ' '); }
+  function tituloNome(s){
+    var particulas = ['da', 'de', 'do', 'das', 'dos', 'e'];
+    return String(s || '').trim().replace(/\s+/g, ' ').split(' ').map(function(w, i){
+      var l = w.toLowerCase();
+      if(i > 0 && particulas.indexOf(l) !== -1) return l;
+      return l.charAt(0).toUpperCase() + l.slice(1);
+    }).join(' ');
+  }
+  // Mantém só a resposta mais recente de cada pessoa para cada técnico.
+  function dedupeCliente(recs){
+    var melhor = {}, ordem = [], duplicadas = [], n = 0;
+    (recs || []).forEach(function(r){
+      var nome = chaveNome(r.avaliador);
+      var anonimo = !nome || /nao identificado/.test(nome);
+      var k = (!anonimo && r.avaliado) ? nome + '|' + r.avaliado : 'unica:' + (n++);
+      if(!melhor[k]){ melhor[k] = r; ordem.push(k); return; }
+      if((r.ts || 0) >= (melhor[k].ts || 0)){ duplicadas.push(melhor[k]); melhor[k] = r; } else { duplicadas.push(r); }
+    });
+    return { unicas: ordem.map(function(k){ return melhor[k]; }), duplicadas: duplicadas };
+  }
+  async function jaAvaliou(nome, tecnico){
+    if(!API_OK || !nome) return false;
+    try{
+      var r = await apiCall({action:'getMyEvaluations', sheet: SHEET_EVAL, avaliador: nome});
+      var recs = (r && r.ok && r.records) ? r.records : [];
+      return recs.some(function(x){ return x.type === 'cliente' && x.avaliado === tecnico; });
+    }catch(e){ return false; } // se não der para conferir, não trava a resposta
+  }
+
   async function fetchAllEvaluations(){
     if(!API_OK) return [];
     try{
@@ -597,11 +629,22 @@
 
     updateSubmitState('cliente');
 
+    var enviando = false;
     main.querySelector('#submitBtn').addEventListener('click', async function(){
-      if(!isFormValid('cliente')) return;
+      if(enviando || !isFormValid('cliente')) return;
+      enviando = true;
+      var btn = this;
+      btn.disabled = true;
+      var nomeFinal = tituloNome(d.avaliadorNome);
+      if(await jaAvaliou(nomeFinal, d.avaliado)){
+        showMsg(main, 'err', 'Você já enviou uma avaliação sobre '+d.avaliado+'. Cada pessoa avalia cada técnico uma única vez.');
+        enviando = false;
+        btn.disabled = false;
+        return;
+      }
       var record = {
         id: uid(), type: 'cliente', ts: Date.now(),
-        area: d.area, avaliador: d.avaliadorNome || (d.area + ' (não identificado)'),
+        area: d.area, avaliador: nomeFinal || (d.area + ' (não identificado)'),
         avaliado: d.avaliado,
         satisfacaoGQ: d.satisfacaoGQ,
         valorMaisForte: d.valorMaisForte,
@@ -616,6 +659,8 @@
         showMsg(main, 'ok', 'Avaliação registrada. Obrigado pelo feedback sobre '+record.avaliado+'!');
       } else {
         showMsg(main, 'err', 'Não foi possível salvar agora. Tente novamente.');
+        enviando = false;
+        btn.disabled = false;
       }
     });
   }
@@ -670,7 +715,9 @@
           if(msg) msg.innerHTML = '<div class="banner err">O código bate localmente, mas o backend recusou — confira se RESULTADOS_PASSCODE e SECRET_KEY são iguais.</div>';
           return;
         }
-        state.evaluations = recs || [];
+        var dd = dedupeCliente((recs || []).filter(function(r){ return r.type === 'cliente'; }));
+        state.evaluations = dd.unicas;
+        state.duplicadasIgnoradas = dd.duplicadas.length;
         state.canSeeResults = true;
         state.canEditRoster = true;
         render();
@@ -707,6 +754,7 @@
       '<p class="eyebrow">Painel</p>' +
       '<h1 class="page-title">Resultados</h1>' +
       '<p class="page-sub">Satisfação, valores a fortalecer e expectativas, por técnico(a).</p>' +
+      ((state.duplicadasIgnoradas || 0) > 0 ? '<div class="banner info">'+state.duplicadasIgnoradas+' resposta(s) duplicada(s) foram ignoradas: vale a mais recente de cada pessoa para cada técnico.</div>' : '') +
 
       '<div class="filter-bar">' +
         selectField('Técnico(a) avaliado(a)', 'sel-pessoa', pessoas, pessoa) +
